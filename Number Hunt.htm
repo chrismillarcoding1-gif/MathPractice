@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number Hunt</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1923;
+    --card: #1a2638;
+    --card2: #1f2e42;
+    --accent: #f7c948;
+    --accent2: #ff6b6b;
+    --green: #4ecb71;
+    --blue: #4fa3e0;
+    --text: #e8edf2;
+    --muted: #7a92aa;
+    --border: #2d4258;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-image: radial-gradient(ellipse at 20% 20%, #1a2e4a 0%, transparent 50%),
+                      radial-gradient(ellipse at 80% 80%, #1a1f2e 0%, transparent 50%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 0.8rem;
+  }
+
+  header h1 {
+    font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+    font-weight: 900;
+    letter-spacing: -1px;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(247,201,72,0.3);
+  }
+
+  header p {
+    color: var(--muted);
+    margin-top: 0.2rem;
+    font-size: 0.85rem;
+  }
+
+  .game-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 1.5rem 2rem;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .difficulty-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+  }
+
+  .diff-btn {
+    flex: none;
+    padding: 0.35rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    background: var(--card2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .diff-btn.active {
+    background: rgba(79,163,224,0.2);
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .targets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .target-box {
+    background: var(--card2);
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    text-align: center;
+    border: 2px solid var(--border);
+  }
+
+  .target-box.sum-box { border-color: rgba(79,163,224,0.4); }
+  .target-box.product-box { border-color: rgba(247,201,72,0.4); }
+
+  .target-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.2rem;
+  }
+
+  .sum-box .target-label { color: var(--blue); }
+  .product-box .target-label { color: var(--accent); }
+
+  .target-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .sum-box .target-value { color: var(--blue); }
+  .product-box .target-value { color: var(--accent); }
+
+  .target-desc {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .num-input-wrap {
+    flex: 1;
+  }
+
+  .num-input-wrap label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 0.7rem 1rem;
+    font-size: 1.4rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--text);
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(79,163,224,0.15);
+  }
+
+  .operator {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--muted);
+    margin-top: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .live-check {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .check-item {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+
+  .check-item .check-label { color: var(--muted); }
+  .check-item .check-val {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: color 0.3s;
+  }
+
+  .check-val.match { color: var(--green); }
+  .check-val.no-match { color: var(--accent2); }
+  .check-val.neutral { color: var(--muted); }
+
+  .check-icon { margin-left: 0.3rem; font-size: 0.85rem; }
+
+  .btn-row {
+    display: flex;
+    gap: 0.7rem;
+    margin-bottom: 0.7rem;
+  }
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s, filter 0.2s;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-check {
+    background: var(--accent);
+    color: #1a1400;
+  }
+
+  .btn-check:hover { filter: brightness(1.1); box-shadow: 0 4px 20px rgba(247,201,72,0.4); }
+
+  .btn-new {
+    background: var(--card2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-new:hover { background: var(--border); }
+
+  .hint-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 0.82rem;
+    padding: 0.5rem;
+    border-radius: 10px;
+    margin-bottom: 0.6rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .hint-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  .hint-text {
+    display: none;
+    background: rgba(79,163,224,0.08);
+    border: 1px solid rgba(79,163,224,0.25);
+    border-radius: 10px;
+    padding: 0.65rem 0.9rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.82rem;
+    color: var(--blue);
+    line-height: 1.5;
+  }
+
+  .hint-text.show { display: block; animation: popIn 0.2s ease; }
+
+  .feedback {
+    border-radius: 12px;
+    padding: 0.7rem 1rem;
+    text-align: center;
+    font-weight: 800;
+    font-size: 0.95rem;
+    visibility: hidden;
+    animation: popIn 0.25s ease;
+    min-height: 2.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .feedback.correct {
+    visibility: visible;
+    background: rgba(78,203,113,0.15);
+    border: 1.5px solid var(--green);
+    color: var(--green);
+  }
+
+  .feedback.wrong {
+    visibility: visible;
+    background: rgba(255,107,107,0.12);
+    border: 1.5px solid var(--accent2);
+    color: var(--accent2);
+  }
+
+  .feedback.partial {
+    visibility: visible;
+    background: rgba(247,201,72,0.1);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    margin-top: 0.9rem;
+  }
+
+  .stat { text-align: center; }
+
+  .stat-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-top: 0.1rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔢 Number Hunt</h1>
+  <p>Find two numbers that satisfy both conditions</p>
+</header>
+
+<div class="game-card">
+  <div class="difficulty-row">
+    <button class="diff-btn active" onclick="setDifficulty('easy', this)">Easy</button>
+    <button class="diff-btn" onclick="setDifficulty('medium', this)">Medium</button>
+    <button class="diff-btn" onclick="setDifficulty('hard', this)">Hard</button>
+  </div>
+
+  <div class="targets">
+    <div class="target-box sum-box">
+      <div class="target-label">Add up to</div>
+      <div class="target-value" id="sumTarget">—</div>
+      <div class="target-desc">Sum</div>
+    </div>
+    <div class="target-box product-box">
+      <div class="target-label">Multiply to</div>
+      <div class="target-value" id="productTarget">—</div>
+      <div class="target-desc">Product</div>
+    </div>
+  </div>
+
+  <div class="input-row">
+    <div class="num-input-wrap">
+      <label>First number</label>
+      <input type="number" id="num1" placeholder="?" oninput="updateLive()" onkeydown="handleKey(event)">
+    </div>
+    <div class="operator">&amp;</div>
+    <div class="num-input-wrap">
+      <label>Second number</label>
+      <input type="number" id="num2" placeholder="?" oninput="updateLive()" onkeydown="handleKey(event)">
+    </div>
+  </div>
+
+  <div class="live-check">
+    <div class="check-item">
+      <span class="check-label">Sum</span>
+      <span>
+        <span class="check-val neutral" id="liveSum">—</span>
+        <span class="check-icon" id="liveSumIcon"></span>
+      </span>
+    </div>
+    <div class="check-item">
+      <span class="check-label">Product</span>
+      <span>
+        <span class="check-val neutral" id="liveProd">—</span>
+        <span class="check-icon" id="liveProdIcon"></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check ✓</button>
+    <button class="btn-new" onclick="newProblem()">New Problem ↻</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">💡 Show a hint</button>
+  <div class="hint-text" id="hintText"></div>
+
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<div class="stats-row">
+  <div class="stat">
+    <div class="stat-val" id="statCorrect">0</div>
+    <div class="stat-label">Correct</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="statAttempts">0</div>
+    <div class="stat-label">Attempts</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="statStreak">0</div>
+    <div class="stat-label">Streak 🔥</div>
+  </div>
+</div>
+
+<script>
+  let sumTarget, productTarget, answer1, answer2;
+  let difficulty = 'easy';
+  let correct = 0, attempts = 0, streak = 0;
+  let answered = false;
+
+  const difficulties = {
+    easy:   { range: [1, 8],  negatives: false },
+    medium: { range: [1, 12], negatives: true  },
+    hard:   { range: [2, 15], negatives: true  },
+  };
+
+  function setDifficulty(d, btn) {
+    difficulty = d;
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    newProblem();
+  }
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function newProblem() {
+    const cfg = difficulties[difficulty];
+    const [lo, hi] = cfg.range;
+
+    answer1 = randInt(lo, hi) * (cfg.negatives && Math.random() < 0.5 ? -1 : 1);
+    answer2 = randInt(lo, hi) * (cfg.negatives && Math.random() < 0.5 ? -1 : 1);
+    if (answer1 === 0) answer1 = 1;
+    if (answer2 === 0) answer2 = 1;
+
+    sumTarget = answer1 + answer2;
+    productTarget = answer1 * answer2;
+
+    document.getElementById('sumTarget').textContent = sumTarget;
+    document.getElementById('productTarget').textContent = productTarget;
+    document.getElementById('num1').value = '';
+    document.getElementById('num2').value = '';
+    document.getElementById('liveSum').textContent = '—';
+    document.getElementById('liveProd').textContent = '—';
+    document.getElementById('liveSum').className = 'check-val neutral';
+    document.getElementById('liveProd').className = 'check-val neutral';
+    document.getElementById('liveSumIcon').textContent = '';
+    document.getElementById('liveProdIcon').textContent = '';
+
+    const fb = document.getElementById('feedback');
+    fb.className = 'feedback';
+    fb.textContent = '';
+
+    const hint = document.getElementById('hintText');
+    hint.className = 'hint-text';
+    hint.textContent = '';
+
+    answered = false;
+    document.getElementById('num1').focus();
+  }
+
+  function updateLive() {
+    const v1 = document.getElementById('num1').value;
+    const v2 = document.getElementById('num2').value;
+
+    if (v1 === '' || v2 === '') {
+      document.getElementById('liveSum').textContent = '—';
+      document.getElementById('liveProd').textContent = '—';
+      document.getElementById('liveSum').className = 'check-val neutral';
+      document.getElementById('liveProd').className = 'check-val neutral';
+      document.getElementById('liveSumIcon').textContent = '';
+      document.getElementById('liveProdIcon').textContent = '';
+      return;
+    }
+
+    const n1 = parseFloat(v1), n2 = parseFloat(v2);
+    const sum = n1 + n2;
+    const prod = n1 * n2;
+
+    const sumEl = document.getElementById('liveSum');
+    const prodEl = document.getElementById('liveProd');
+
+    sumEl.textContent = sum;
+    prodEl.textContent = prod;
+    sumEl.className = 'check-val ' + (sum === sumTarget ? 'match' : 'no-match');
+    prodEl.className = 'check-val ' + (prod === productTarget ? 'match' : 'no-match');
+    document.getElementById('liveSumIcon').textContent = sum === sumTarget ? '✓' : '';
+    document.getElementById('liveProdIcon').textContent = prod === productTarget ? '✓' : '';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter') checkAnswer();
+  }
+
+  function checkAnswer() {
+    if (answered) return;
+    const v1 = document.getElementById('num1').value;
+    const v2 = document.getElementById('num2').value;
+
+    if (v1 === '' || v2 === '') {
+      showFeedback('partial', 'Enter both numbers first!');
+      return;
+    }
+
+    const n1 = parseFloat(v1), n2 = parseFloat(v2);
+    const sumOk = (n1 + n2) === sumTarget;
+    const prodOk = (n1 * n2) === productTarget;
+
+    attempts++;
+    document.getElementById('statAttempts').textContent = attempts;
+
+    if (sumOk && prodOk) {
+      correct++;
+      streak++;
+      document.getElementById('statCorrect').textContent = correct;
+      document.getElementById('statStreak').textContent = streak;
+      showFeedback('correct', streak >= 3 ? `🔥 ${streak} in a row! Excellent!` : '✅ Correct! Nice work!');
+      answered = true;
+    } else if (sumOk) {
+      streak = 0;
+      document.getElementById('statStreak').textContent = streak;
+      showFeedback('partial', '➕ Sum is right — check the product.');
+    } else if (prodOk) {
+      streak = 0;
+      document.getElementById('statStreak').textContent = streak;
+      showFeedback('partial', '✖️ Product is right — check the sum.');
+    } else {
+      streak = 0;
+      document.getElementById('statStreak').textContent = streak;
+      showFeedback('wrong', 'Neither matches yet. Keep trying!');
+    }
+  }
+
+  function showFeedback(type, msg) {
+    const fb = document.getElementById('feedback');
+    fb.className = 'feedback ' + type;
+    fb.textContent = msg;
+  }
+
+  function toggleHint() {
+    const hint = document.getElementById('hintText');
+    if (hint.classList.contains('show')) {
+      hint.classList.remove('show');
+      return;
+    }
+    const absP = Math.abs(productTarget);
+    let pairs = [];
+    for (let i = 1; i <= Math.ceil(Math.sqrt(absP)) + 1; i++) {
+      if (absP % i === 0) pairs.push([i, absP / i]);
+    }
+    let hintMsg = '';
+    if (productTarget > 0) {
+      hintMsg = `The product is positive, so both numbers have the same sign. `;
+      hintMsg += sumTarget >= 0 ? `The sum is also positive, so both numbers are positive.` : `The sum is negative, so both numbers are negative.`;
+    } else {
+      hintMsg = `The product is negative, so one number is positive and one is negative.`;
+    }
+    hintMsg += ` Factor pairs of ${absP}: ` + pairs.slice(0, 4).map(p => `${p[0]} × ${p[1]}`).join(', ') + '.';
+    hint.textContent = hintMsg;
+    hint.classList.add('show');
+  }
+
+  newProblem();
+</script>
+</body>
+</html>
