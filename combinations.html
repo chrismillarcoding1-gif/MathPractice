@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combinations</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --paper: #fdfaf4;
+    --ink: #1c1a16;
+    --muted: #8a8070;
+    --border: #d4c9b0;
+    --accent: #c0392b;
+    --accent2: #2980b9;
+    --green: #27ae60;
+    --orange: #e67e22;
+    --shadow: rgba(60,50,30,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,170,150,0.15) 27px, rgba(180,170,150,0.15) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(180,170,150,0.08) 27px, rgba(180,170,150,0.08) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.6rem; }
+
+  header h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-style: italic;
+    margin-top: 0.15rem;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.3rem 1.7rem;
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  /* Category filter */
+  .cat-row {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .cat-btn {
+    padding: 0.28rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-family: 'Libre Baskerville', serif;
+    font-weight: 700;
+    background: var(--bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .cat-btn.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+
+  /* Category badge */
+  .cat-badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: 0.18rem 0.55rem;
+    border-radius: 3px;
+    margin-bottom: 0.45rem;
+  }
+
+  .badge-committee { background: rgba(41,128,185,0.12); color: #1a5f8a; }
+  .badge-cards     { background: rgba(192,57,43,0.1);  color: #922b21; }
+  .badge-selection { background: rgba(39,174,96,0.1);  color: #1a7a42; }
+  .badge-subset    { background: rgba(230,126,34,0.1); color: #935116; }
+
+  /* Question box */
+  .question-box {
+    background: rgba(41,128,185,0.05);
+    border: 1.5px solid rgba(41,128,185,0.22);
+    border-radius: 4px;
+    padding: 0.85rem 1.1rem;
+  }
+
+  .question-text {
+    font-size: 0.97rem;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+
+  .question-text .hl  { font-weight: 700; color: var(--accent2); }
+  .question-text .hlr { font-weight: 700; color: var(--accent); }
+  .question-text .hlo { font-weight: 700; color: var(--orange); }
+
+  .note {
+    font-size: 0.76rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 0.3rem;
+  }
+
+  /* Answer */
+  .answer-row {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+  }
+
+  .answer-row label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    white-space: nowrap;
+  }
+
+  input[type="number"] {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 0.55rem 0.9rem;
+    font-size: 1.2rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: textfield;
+    -moz-appearance: textfield;
+    min-width: 0;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+  }
+
+  .btn-row { display: flex; gap: 0.6rem; }
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 4px;
+    padding: 0.62rem 1rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.15s;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-check {
+    background: var(--ink);
+    color: var(--bg);
+    box-shadow: 2px 2px 0 var(--muted);
+  }
+
+  .btn-check:hover { filter: brightness(1.15); }
+
+  .btn-new {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border);
+  }
+
+  .btn-new:hover { background: var(--bg); }
+
+  .feedback {
+    border-radius: 4px;
+    padding: 0.55rem 0.9rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.88rem;
+    min-height: 2.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    font-style: italic;
+  }
+
+  .feedback.correct {
+    visibility: visible;
+    background: rgba(39,174,96,0.1);
+    border: 1.5px solid var(--green);
+    color: var(--green);
+  }
+
+  .feedback.wrong {
+    visibility: visible;
+    background: rgba(192,57,43,0.08);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+  }
+
+  /* Solution */
+  .solution-box {
+    display: none;
+    background: rgba(39,174,96,0.04);
+    border: 1.5px solid rgba(39,174,96,0.28);
+    border-radius: 4px;
+    padding: 0.8rem 1.1rem;
+    font-size: 0.85rem;
+    line-height: 1.75;
+    color: var(--ink);
+    max-height: 170px;
+    overflow-y: auto;
+  }
+
+  .solution-box.show { display: block; }
+
+  .solution-box .sol-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--green);
+    margin-bottom: 0.4rem;
+  }
+
+  .sol-line { margin-bottom: 0.15rem; }
+
+  .sol-math {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    background: rgba(0,0,0,0.04);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    margin-top: 0.3rem;
+  }
+
+  .stat { text-align: center; }
+
+  .stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-top: 0.1rem;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Combinations</h1>
+  <p>Select a category or mix them all.</p>
+</header>
+
+<div class="card">
+  <div class="cat-row">
+    <button class="cat-btn active" onclick="setCat('all',this)">All Types</button>
+    <button class="cat-btn" onclick="setCat('committee',this)">Committees</button>
+    <button class="cat-btn" onclick="setCat('cards',this)">Card Hands</button>
+    <button class="cat-btn" onclick="setCat('selection',this)">Selections</button>
+    <button class="cat-btn" onclick="setCat('subset',this)">Subsets</button>
+  </div>
+
+  <div class="question-box">
+    <div id="catBadge"></div>
+    <div class="question-text" id="questionText"></div>
+    <div class="note" id="questionNote"></div>
+  </div>
+
+  <div class="answer-row">
+    <label>Your answer:</label>
+    <input type="number" id="answerInput" placeholder="?" step="1" min="1" onkeydown="handleKey(event)">
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check ✓</button>
+    <button class="btn-new" onclick="newProblem()">New Problem ↻</button>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <div class="solution-box" id="solutionBox">
+    <div class="sol-label">Solution</div>
+    <div id="solutionContent"></div>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat"><div class="stat-val" id="statCorrect">0</div><div class="stat-label">Correct</div></div>
+  <div class="stat"><div class="stat-val" id="statAttempts">0</div><div class="stat-label">Attempts</div></div>
+  <div class="stat"><div class="stat-val" id="statStreak">0</div><div class="stat-label">Streak</div></div>
+</div>
+
+<script>
+// ── Math helpers ───────────────────────────────────────────────
+function fact(n) {
+  if (n <= 1) return 1;
+  let r = 1; for (let i = 2; i <= n; i++) r *= i; return r;
+}
+
+function C(n, r) {
+  if (r < 0 || r > n) return 0;
+  if (r === 0 || r === n) return 1;
+  r = Math.min(r, n - r);
+  let num = 1, den = 1;
+  for (let i = 0; i < r; i++) { num *= (n - i); den *= (i + 1); }
+  return Math.round(num / den);
+}
+
+function cStr(n, r) { return `C(${n},${r})`; }
+function cVal(n, r) { return `C(${n},${r}) = ${C(n,r)}`; }
+
+// ── State ──────────────────────────────────────────────────────
+let category = 'all';
+let prob = {};
+let correct = 0, attempts = 0, streak = 0;
+let answered = false;
+
+function setCat(c, btn) {
+  category = c;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  newProblem();
+}
+
+function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function randItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ── Problem routing ────────────────────────────────────────────
+const TYPES = ['committee', 'cards', 'selection', 'subset'];
+
+function newProblem() {
+  const pool = category === 'all' ? TYPES : [category];
+  const type = randItem(pool);
+  if      (type === 'committee') prob = randItem(committeeProblems)();
+  else if (type === 'cards')     prob = randItem(cardProblems)();
+  else if (type === 'selection') prob = randItem(selectionProblems)();
+  else                           prob = randItem(subsetProblems)();
+
+  document.getElementById('answerInput').value = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('solutionBox').classList.remove('show');
+  document.getElementById('solutionContent').innerHTML = '';
+  answered = false;
+
+  document.getElementById('catBadge').innerHTML =
+    `<span class="cat-badge badge-${type}">${type === 'cards' ? 'Card Hands' : type.charAt(0).toUpperCase()+type.slice(1)}</span>`;
+  document.getElementById('questionText').innerHTML = prob.questionHTML;
+  document.getElementById('questionNote').textContent = prob.note || '';
+  document.getElementById('answerInput').focus();
+}
+
+// ══════════════════════════════════════════════════════════════
+// COMMITTEE PROBLEMS
+// ══════════════════════════════════════════════════════════════
+const committeeProblems = [
+
+  // 1. Simple committee from one group
+  () => {
+    const total = randInt(8, 15);
+    const size  = randInt(3, 5);
+    const groups = [
+      ['students','student'],['employees','employee'],['volunteers','volunteer'],
+      ['nurses','nurse'],['engineers','engineer'],['teachers','teacher'],
+    ];
+    const [gPlural] = randItem(groups);
+    const answer = C(total, size);
+    return {
+      questionHTML: `A club has <span class="hl">${total} ${gPlural}</span>. In how many ways can a committee of <span class="hl">${size}</span> be formed?`,
+      answer,
+      solutionSteps: [
+        `Order doesn't matter — use combinations.`,
+        `= <span class="sol-math">${cStr(total,size)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 2. Committee from two groups, exact split
+  () => {
+    const g1 = ['doctors','doctors'], g2 = ['nurses','nurses'];
+    const pairs = [
+      {g1:'doctors',g2:'nurses'},{g1:'teachers',g2:'students'},
+      {g1:'men',g2:'women'},{g1:'seniors',g2:'juniors'},
+      {g1:'engineers',g2:'managers'},{g1:'scientists',g2:'technicians'},
+    ];
+    const grp = randItem(pairs);
+    const n1 = randInt(4, 9), n2 = randInt(4, 9);
+    const r1 = randInt(1, Math.min(3, n1)), r2 = randInt(1, Math.min(3, n2));
+    const answer = C(n1, r1) * C(n2, r2);
+    return {
+      questionHTML: `A committee of <span class="hl">${r1+r2}</span> is to be formed from <span class="hl">${n1} ${grp.g1}</span> and <span class="hl">${n2} ${grp.g2}</span>. How many committees contain exactly <span class="hlo">${r1} ${grp.g1}</span> and <span class="hlo">${r2} ${grp.g2}</span>?`,
+      answer,
+      solutionSteps: [
+        `Choose ${r1} from ${n1} ${grp.g1}: <span class="sol-math">${cVal(n1,r1)}</span>`,
+        `Choose ${r2} from ${n2} ${grp.g2}: <span class="sol-math">${cVal(n2,r2)}</span>`,
+        `Multiply (independent choices): <span class="sol-math">${C(n1,r1)} × ${C(n2,r2)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 3. At least one from each group
+  () => {
+    const pairs = [
+      {g1:'doctors',g2:'teachers'},{g1:'men',g2:'women'},
+      {g1:'seniors',g2:'freshmen'},{g1:'scientists',g2:'engineers'},
+    ];
+    const grp = randItem(pairs);
+    const n1 = randInt(4,8), n2 = randInt(4,8);
+    const size = randInt(3, Math.min(5, n1+n2));
+    // Enumerate all valid splits: r1 from 1..(size-1), r2=size-r1, r1<=n1, r2<=n2
+    let answer = 0;
+    const splits = [];
+    for (let r1 = 1; r1 < size; r1++) {
+      const r2 = size - r1;
+      if (r1 <= n1 && r2 <= n2 && r2 >= 1) {
+        const ways = C(n1,r1)*C(n2,r2);
+        splits.push(`${cStr(n1,r1)} × ${cStr(n2,r2)} = ${C(n1,r1)} × ${C(n2,r2)} = ${ways}`);
+        answer += ways;
+      }
+    }
+    return {
+      questionHTML: `A committee of <span class="hl">${size}</span> must include at least one <span class="hlo">${grp.g1.replace(/s$/,'')}</span> and at least one <span class="hlo">${grp.g2.replace(/s$/,'')}</span>. There are <span class="hl">${n1} ${grp.g1}</span> and <span class="hl">${n2} ${grp.g2}</span> available. How many such committees exist?`,
+      answer,
+      solutionSteps: [
+        `Enumerate valid (${grp.g1.replace(/s$/,'')}, ${grp.g2.replace(/s$/,'')}) splits summing to ${size}:`,
+        ...splits.map(s => `&nbsp;&nbsp;${s}`),
+        `Total = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 4. Committee with one specific person included/excluded
+  () => {
+    const names = ['Alice','Bob','Carlos','Diana','Ethan','Fatima','George','Hannah'];
+    const person = randItem(names);
+    const total = randInt(8,14);
+    const size  = randInt(3,5);
+    const include = Math.random() < 0.5;
+    let answer, steps;
+    if (include) {
+      // Person is fixed → choose size-1 from total-1
+      answer = C(total-1, size-1);
+      steps = [
+        `${person} must be on the committee — fix their spot.`,
+        `Choose the remaining <strong>${size-1}</strong> from the other <strong>${total-1}</strong> people.`,
+        `= <span class="sol-math">${cVal(total-1,size-1)}</span> = <strong>${answer}</strong>`,
+      ];
+    } else {
+      // Person excluded → choose size from total-1
+      answer = C(total-1, size);
+      steps = [
+        `${person} cannot be on the committee — remove them from the pool.`,
+        `Choose <strong>${size}</strong> from the remaining <strong>${total-1}</strong> people.`,
+        `= <span class="sol-math">${cVal(total-1,size)}</span> = <strong>${answer}</strong>`,
+      ];
+    }
+    return {
+      questionHTML: `A committee of <span class="hl">${size}</span> is chosen from <span class="hl">${total} people</span>. How many committees ${include ? `<span class="hlo">include</span>` : `<span class="hlr">exclude</span>`} <span class="hlo">${person}</span>?`,
+      answer,
+      solutionSteps: steps,
+    };
+  },
+
+  // 5. At least / at most from one group
+  () => {
+    const grps = [{g1:'women',g2:'men'},{g1:'juniors',g2:'seniors'},{g1:'nurses',g2:'doctors'}];
+    const grp = randItem(grps);
+    const n1 = randInt(4,7), n2 = randInt(4,7);
+    const size = randInt(3, Math.min(5, n1+n2));
+    const useAtLeast = Math.random() < 0.5;
+    const threshold = randInt(1, Math.min(2, size-1));
+
+    let answer = 0;
+    const splits = [];
+    const rangeStart = useAtLeast ? threshold : 0;
+    const rangeEnd   = useAtLeast ? size : threshold;
+
+    for (let r1 = rangeStart; r1 <= rangeEnd; r1++) {
+      const r2 = size - r1;
+      if (r1 <= n1 && r2 >= 0 && r2 <= n2) {
+        const ways = C(n1,r1)*C(n2,r2);
+        splits.push(`${r1} ${grp.g1}: <span class="sol-math">${cStr(n1,r1)} × ${cStr(n2,r2)}</span> = ${ways}`);
+        answer += ways;
+      }
+    }
+    if (answer <= 0) {
+      // Fallback to simple problem
+      return committeeProblems[0]();
+    }
+
+    const cond = useAtLeast
+      ? `<span class="hlo">at least ${threshold}</span> ${grp.g1}`
+      : `<span class="hlo">at most ${threshold}</span> ${grp.g1}`;
+
+    return {
+      questionHTML: `A committee of <span class="hl">${size}</span> is formed from <span class="hl">${n1} ${grp.g1}</span> and <span class="hl">${n2} ${grp.g2}</span>. How many ways include ${cond}?`,
+      answer,
+      solutionSteps: [
+        `Sum over all valid counts of ${grp.g1} (${rangeStart} to ${rangeEnd}):`,
+        ...splits.map(s => `&nbsp;&nbsp;${s}`),
+        `Total = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+];
+
+// ══════════════════════════════════════════════════════════════
+// CARD HAND PROBLEMS  (standard 52-card deck: 4 suits × 13 ranks)
+// Ranks: A,2-10,J,Q,K  Suits: ♠♥♦♣
+// ══════════════════════════════════════════════════════════════
+const cardProblems = [
+
+  // 1. No restriction
+  () => {
+    const size = randInt(4,6);
+    const answer = C(52, size);
+    return {
+      questionHTML: `How many <span class="hl">${size}-card hands</span> can be dealt from a standard <span class="hl">52-card deck</span>?`,
+      answer,
+      solutionSteps: [
+        `No restrictions — choose any ${size} cards from 52.`,
+        `= <span class="sol-math">${cVal(52,size)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 2. All same suit (flush)
+  () => {
+    const size = randInt(4,5);
+    const answer = 4 * C(13, size);
+    return {
+      questionHTML: `How many <span class="hl">${size}-card hands</span> consist entirely of cards from the <span class="hlo">same suit</span>? (52-card deck)`,
+      answer,
+      solutionSteps: [
+        `Choose 1 suit from 4: <span class="sol-math">C(4,1) = 4</span>`,
+        `Choose ${size} cards from the 13 in that suit: <span class="sol-math">${cVal(13,size)}</span>`,
+        `= <span class="sol-math">4 × ${C(13,size)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 3. At least one of a named rank
+  () => {
+    const ranks = ['king','queen','jack','ace'];
+    const rank = randItem(ranks);
+    const size = randInt(4,6);
+    const totalHands = C(52, size);
+    const noRank = C(48, size);  // 52-4=48 non-rank cards
+    const answer = totalHands - noRank;
+    return {
+      questionHTML: `How many <span class="hl">${size}-card hands</span> contain <span class="hlo">at least one ${rank}</span>? (52-card deck, 4 ${rank}s)`,
+      answer,
+      solutionSteps: [
+        `Use complementary counting: at least one ${rank} = Total − no ${rank}s.`,
+        `Total hands: <span class="sol-math">${cVal(52,size)}</span>`,
+        `Hands with no ${rank}s (choose from 48 non-${rank} cards): <span class="sol-math">${cVal(48,size)}</span>`,
+        `= <span class="sol-math">${totalHands} − ${noRank}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 4. Exactly k of a named rank
+  () => {
+    const ranks = ['kings','queens','jacks','aces'];
+    const rank = randItem(ranks);
+    const size = randInt(4,5);
+    const k = randInt(1, Math.min(3, size-1));
+    const answer = C(4,k) * C(48, size-k);
+    return {
+      questionHTML: `How many <span class="hl">${size}-card hands</span> contain <span class="hlo">exactly ${k} ${rank}</span>? (52-card deck)`,
+      answer,
+      solutionSteps: [
+        `Choose ${k} ${rank} from the 4 available: <span class="sol-math">${cVal(4,k)}</span>`,
+        `Fill the other ${size-k} spots from the remaining 48 non-${rank} cards: <span class="sol-math">${cVal(48,size-k)}</span>`,
+        `= <span class="sol-math">${C(4,k)} × ${C(48,size-k)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 5. All same rank group (e.g. all face cards)
+  () => {
+    const size = randInt(3,5);
+    // 12 face cards (J, Q, K × 4 suits)
+    const answer = C(12, size);
+    return {
+      questionHTML: `How many <span class="hl">${size}-card hands</span> consist entirely of <span class="hlo">face cards</span> (Jacks, Queens, Kings)? (52-card deck)`,
+      answer,
+      solutionSteps: [
+        `There are 3 × 4 = 12 face cards in the deck.`,
+        `Choose ${size} from these 12: <span class="sol-math">${cVal(12,size)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 6. Specific number from each suit
+  () => {
+    const r1 = randInt(1,3), r2 = randInt(1,3), r3 = randInt(1,3), r4 = randInt(1,3);
+    const size = r1+r2+r3+r4;
+    if (size > 13) return cardProblems[0]();
+    const suits = ['spades','hearts','diamonds','clubs'];
+    const answer = C(13,r1)*C(13,r2)*C(13,r3)*C(13,r4);
+    return {
+      questionHTML: `How many <span class="hl">${size}-card hands</span> contain exactly <span class="hlo">${r1} spade${r1>1?'s':''}, ${r2} heart${r2>1?'s':''}, ${r3} diamond${r3>1?'s':''}, and ${r4} club${r4>1?'s':''}</span>?`,
+      answer,
+      solutionSteps: [
+        `Choose independently from each suit (13 cards each):`,
+        `Spades: <span class="sol-math">${cVal(13,r1)}</span>`,
+        `Hearts: <span class="sol-math">${cVal(13,r2)}</span>`,
+        `Diamonds: <span class="sol-math">${cVal(13,r3)}</span>`,
+        `Clubs: <span class="sol-math">${cVal(13,r4)}</span>`,
+        `= <span class="sol-math">${C(13,r1)} × ${C(13,r2)} × ${C(13,r3)} × ${C(13,r4)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 7. At least one from each suit
+  () => {
+    const size = 4; // one from each suit minimum, makes it tractable
+    // Exactly 1 from each suit: C(13,1)^4
+    // For size=4: must be exactly 1 from each
+    const answer = Math.pow(C(13,1), 4);
+    return {
+      questionHTML: `How many <span class="hl">4-card hands</span> contain <span class="hlo">exactly one card from each suit</span>? (52-card deck)`,
+      answer,
+      solutionSteps: [
+        `We need exactly 1 card from each of the 4 suits.`,
+        `From each suit, choose 1 of 13: <span class="sol-math">C(13,1) = 13</span> per suit.`,
+        `= <span class="sol-math">13 × 13 × 13 × 13 = 13<sup>4</sup></span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+];
+
+// ══════════════════════════════════════════════════════════════
+// SELECTION PROBLEMS  (items with repetition / "at least one")
+// For identical items of each type: choosing 0..k of each type
+// Total combos = product of (k_i + 1), subtract 1 for "buy nothing"
+// ══════════════════════════════════════════════════════════════
+const selectionProblems = [
+
+  // 1. Store purchase — at least one item total
+  () => {
+    const stores = [
+      { name: 'candy store',    item1: 'lollipops',     item2: 'gummy bears',   item3: null },
+      { name: 'bakery',         item1: 'muffins',       item2: 'croissants',    item3: null },
+      { name: 'snack shop',     item1: 'chocolate bars',item2: 'sour keys',     item3: null },
+      { name: 'fruit stand',    item1: 'apples',        item2: 'oranges',       item3: 'bananas' },
+      { name: 'cookie shop',    item1: 'sugar cookies', item2: 'oatmeal cookies',item3: 'chocolate cookies' },
+    ];
+    const store = randItem(stores);
+    const n1 = randInt(2,6), n2 = randInt(2,6);
+    const has3 = store.item3 !== null;
+    const n3 = has3 ? randInt(2,5) : 0;
+
+    // Choices per item type: 0..n_i → (n_i+1) options
+    const choices = has3 ? (n1+1)*(n2+1)*(n3+1) : (n1+1)*(n2+1);
+    const answer = choices - 1; // subtract "buy nothing"
+
+    const steps = [
+      `Each item type is identical — only the quantity matters.`,
+      `For <strong>${store.item1}</strong>: buy 0 to ${n1} → <strong>${n1+1}</strong> choices.`,
+      `For <strong>${store.item2}</strong>: buy 0 to ${n2} → <strong>${n2+1}</strong> choices.`,
+    ];
+    if (has3) {
+      steps.push(`For <strong>${store.item3}</strong>: buy 0 to ${n3} → <strong>${n3+1}</strong> choices.`);
+      steps.push(`Total combinations (including buying nothing): <span class="sol-math">${n1+1} × ${n2+1} × ${n3+1} = ${choices}</span>`);
+    } else {
+      steps.push(`Total combinations (including buying nothing): <span class="sol-math">${n1+1} × ${n2+1} = ${choices}</span>`);
+    }
+    steps.push(`Subtract the "buy nothing" case: <span class="sol-math">${choices} − 1</span> = <strong>${answer}</strong>`);
+
+    const itemList = has3
+      ? `<span class="hl">${n1} ${store.item1}</span>, <span class="hl">${n2} ${store.item2}</span>, and <span class="hl">${n3} ${store.item3}</span>`
+      : `<span class="hl">${n1} ${store.item1}</span> and <span class="hl">${n2} ${store.item2}</span>`;
+
+    return {
+      questionHTML: `A ${store.name} has ${itemList} in stock. How many different purchases can a customer make if they must buy <span class="hlo">at least one item</span>?`,
+      note: `Items of the same type are identical.`,
+      answer,
+      solutionSteps: steps,
+    };
+  },
+
+  // 2. Coin selection
+  () => {
+    const coins = [
+      { name: 'pennies', n: randInt(2,6) },
+      { name: 'nickels', n: randInt(2,5) },
+      { name: 'dimes',   n: randInt(2,5) },
+    ];
+    const useAll = Math.random() < 0.5;
+    const selected = useAll ? coins : coins.slice(0,2);
+    const choices = selected.reduce((acc, c) => acc * (c.n + 1), 1);
+    const answer = choices - 1;
+
+    return {
+      questionHTML: `A piggy bank contains <span class="hl">${selected.map(c=>`${c.n} ${c.name}`).join(', ')}</span>. How many non-empty <span class="hlo">selections of coins</span> can be made?`,
+      note: `Coins of the same denomination are identical.`,
+      answer,
+      solutionSteps: [
+        `For each coin type, choose how many to take (0 up to the available amount):`,
+        ...selected.map(c => `<strong>${c.name}</strong>: 0–${c.n} → ${c.n+1} choices`),
+        `All combinations including none: <span class="sol-math">${selected.map(c=>c.n+1).join(' × ')} = ${choices}</span>`,
+        `Subtract the empty selection: <span class="sol-math">${choices} − 1</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 3. At least one of EACH type
+  () => {
+    const contexts = [
+      { item1: 'red marbles', item2: 'blue marbles', item3: 'green marbles' },
+      { item1: 'hardcover books', item2: 'paperback books', item3: null },
+      { item1: 'fiction novels', item2: 'non-fiction books', item3: null },
+    ];
+    const ctx = randItem(contexts);
+    const n1 = randInt(2,5), n2 = randInt(2,5);
+    const has3 = ctx.item3 !== null;
+    const n3 = has3 ? randInt(2,4) : 0;
+
+    // At least 1 of each: choices = n1 × n2 (× n3 if applicable)
+    // (choosing 1..n_i for each → n_i options each)
+    const answer = has3 ? n1 * n2 * n3 : n1 * n2;
+
+    const steps = [
+      `Must buy at least 1 of each type.`,
+      `<strong>${ctx.item1}</strong>: choose 1 to ${n1} → <strong>${n1}</strong> options.`,
+      `<strong>${ctx.item2}</strong>: choose 1 to ${n2} → <strong>${n2}</strong> options.`,
+    ];
+    if (has3) {
+      steps.push(`<strong>${ctx.item3}</strong>: choose 1 to ${n3} → <strong>${n3}</strong> options.`);
+      steps.push(`Total = <span class="sol-math">${n1} × ${n2} × ${n3}</span> = <strong>${answer}</strong>`);
+    } else {
+      steps.push(`Total = <span class="sol-math">${n1} × ${n2}</span> = <strong>${answer}</strong>`);
+    }
+
+    const itemList = has3
+      ? `<span class="hl">${n1} ${ctx.item1}</span>, <span class="hl">${n2} ${ctx.item2}</span>, and <span class="hl">${n3} ${ctx.item3}</span>`
+      : `<span class="hl">${n1} ${ctx.item1}</span> and <span class="hl">${n2} ${ctx.item2}</span>`;
+
+    return {
+      questionHTML: `A bag contains ${itemList}. How many selections include <span class="hlo">at least one of each colour</span>?`,
+      note: `Items of the same type are identical.`,
+      answer,
+      solutionSteps: steps,
+    };
+  },
+
+  // 4. Distributing identical items
+  () => {
+    const items = randItem(['cookies','candies','stickers','books','tokens']);
+    const people = randItem(['children','students','players','friends']);
+    const nPeople = randInt(2,4);
+    const nItems  = randInt(nPeople, nPeople + 4); // stars-and-bars: C(n+r-1, r-1)
+    const answer = C(nItems + nPeople - 1, nPeople - 1);
+    return {
+      questionHTML: `In how many ways can <span class="hl">${nItems} identical ${items}</span> be distributed among <span class="hl">${nPeople} ${people}</span> if each person may receive <span class="hlo">any number</span> (including zero)?`,
+      note: `Stars and bars method.`,
+      answer,
+      solutionSteps: [
+        `This is a "stars and bars" distribution problem.`,
+        `Formula: <span class="sol-math">C(n + r − 1, r − 1)</span> where n = items, r = recipients.`,
+        `= <span class="sol-math">C(${nItems} + ${nPeople} − 1, ${nPeople} − 1)</span>`,
+        `= <span class="sol-math">${cVal(nItems+nPeople-1, nPeople-1)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+];
+
+// ══════════════════════════════════════════════════════════════
+// SUBSET PROBLEMS  (each item chosen or not → 2^n)
+// ══════════════════════════════════════════════════════════════
+const subsetProblems = [
+
+  // 1. Toppings / options (non-empty subsets)
+  () => {
+    const contexts = [
+      { place: 'hamburger shop',  items: 'toppings',       verb: 'customize their burger' },
+      { place: 'pizza restaurant',items: 'toppings',       verb: 'top their pizza' },
+      { place: 'ice cream parlour',items: 'mix-ins',       verb: 'customize their ice cream' },
+      { place: 'sandwich shop',   items: 'condiments',     verb: 'dress their sandwich' },
+      { place: 'yogurt bar',      items: 'toppings',       verb: 'top their yogurt' },
+    ];
+    const ctx = randItem(contexts);
+    const n = randInt(5, 10);
+    const requireAtLeastOne = Math.random() < 0.7;
+    const answer = requireAtLeastOne ? Math.pow(2, n) - 1 : Math.pow(2, n);
+
+    return {
+      questionHTML: `A ${ctx.place} offers <span class="hl">${n} different ${ctx.items}</span>. How many ways can a customer ${requireAtLeastOne ? `choose <span class="hlo">at least one</span> topping to` : ``} ${ctx.verb}${requireAtLeastOne ? `` : ` (including choosing no toppings)`}?`,
+      answer,
+      solutionSteps: requireAtLeastOne ? [
+        `Each of the ${n} ${ctx.items} is either included or not → <span class="sol-math">2<sup>${n}</sup></span> total subsets.`,
+        `Subtract the empty selection (no toppings): <span class="sol-math">2<sup>${n}</sup> − 1 = ${Math.pow(2,n)} − 1</span> = <strong>${answer}</strong>`,
+      ] : [
+        `Each of the ${n} ${ctx.items} is either included or not.`,
+        `Total subsets including empty set = <span class="sol-math">2<sup>${n}</sup></span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 2. Subsets of a set
+  () => {
+    const n = randInt(4, 8);
+    const atLeastOne = Math.random() < 0.5;
+    const answer = atLeastOne ? Math.pow(2,n) - 1 : Math.pow(2,n);
+    return {
+      questionHTML: `How many subsets does a set with <span class="hl">${n} elements</span> have${atLeastOne ? `, excluding the <span class="hlo">empty set</span>` : ``}?`,
+      answer,
+      solutionSteps: atLeastOne ? [
+        `Total subsets of an n-element set = 2<sup>n</sup>.`,
+        `= <span class="sol-math">2<sup>${n}</sup> − 1 = ${Math.pow(2,n)} − 1</span> = <strong>${answer}</strong>`,
+      ] : [
+        `Every element is either in or out of the subset.`,
+        `Total subsets = <span class="sol-math">2<sup>${n}</sup></span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 3. Binary choices in sequence (same idea, different framing)
+  () => {
+    const scenarios = [
+      { n: randInt(4,8), context: 'questions on a true/false quiz', note: 'Each question has 2 possible answers.' },
+      { n: randInt(4,7), context: 'features in a software package', note: 'Each feature can be enabled or disabled.' },
+      { n: randInt(4,8), context: 'elective courses to take or skip', note: 'Each course is either taken or not.' },
+    ];
+    const s = randItem(scenarios);
+    const answer = Math.pow(2, s.n);
+    return {
+      questionHTML: `There are <span class="hl">${s.n} ${s.context}</span>. How many distinct outcomes are possible?`,
+      note: s.note,
+      answer,
+      solutionSteps: [
+        `Each of the ${s.n} items has 2 independent outcomes.`,
+        `Total = <span class="sol-math">2<sup>${s.n}</sup></span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 4. Subsets of exactly size k  
+  () => {
+    const n = randInt(6, 10);
+    const k = randInt(2, Math.floor(n/2));
+    const answer = C(n, k);
+    return {
+      questionHTML: `How many subsets of size <span class="hl">${k}</span> can be formed from a set of <span class="hl">${n} distinct elements</span>?`,
+      answer,
+      solutionSteps: [
+        `Order doesn't matter — this is a combination.`,
+        `= <span class="sol-math">${cVal(n,k)}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+
+  // 5. Menu / meal selection (at least one from each course)
+  () => {
+    const n1 = randInt(3,6), n2 = randInt(3,6), n3 = randInt(2,4);
+    const courses = [
+      ['appetizers','mains','desserts'],
+      ['starters','entrées','sides'],
+    ];
+    const [c1,c2,c3] = randItem(courses);
+    // At least one from each course: just multiply (each choice independent)
+    // But customers choose exactly one from each → n1 × n2 × n3
+    const answer = n1 * n2 * n3;
+    return {
+      questionHTML: `A restaurant menu has <span class="hl">${n1} ${c1}</span>, <span class="hl">${n2} ${c2}</span>, and <span class="hl">${n3} ${c3}</span>. A meal consists of <span class="hlo">one item from each course</span>. How many different meals are possible?`,
+      answer,
+      solutionSteps: [
+        `Independent choices from each course.`,
+        `= <span class="sol-math">${n1} × ${n2} × ${n3}</span> = <strong>${answer}</strong>`,
+      ],
+    };
+  },
+];
+
+// ── Answer checking ────────────────────────────────────────────
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const val = document.getElementById('answerInput').value;
+  if (val === '') { showFeedback('wrong', 'Enter your answer first.'); return; }
+
+  const userAns = parseInt(val, 10);
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  if (userAns === prob.answer) {
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent = streak;
+    showFeedback('correct', streak >= 3 ? `🔥 ${streak} in a row! Correct!` : `✓ Correct! The answer is ${prob.answer}.`);
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    showFeedback('wrong', `Incorrect — the answer is ${prob.answer}. See the solution below.`);
+  }
+
+  answered = true;
+  showSolution();
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+function showSolution() {
+  document.getElementById('solutionContent').innerHTML =
+    prob.solutionSteps.map(s => `<div class="sol-line">${s}</div>`).join('');
+  document.getElementById('solutionBox').classList.add('show');
+}
+
+newProblem();
+</script>
+</body>
+</html>
